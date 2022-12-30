@@ -1,0 +1,82 @@
+#checking that main got minimal arguments
+if [[ $# -eq 0 ]] ;  then
+     echo 'No argument supplied'
+     exit 1
+fi
+
+#checking that file exists in directory
+if ! [[ -f $1 ]] ; then
+  exit 1
+fi
+
+#checking that all the files exist
+for chapter in $(cat $1) ; do
+  if ! [[ -f $1 ]] ; then
+    exit 1
+  fi
+done
+
+echo "Enter: number / files / names / stats <chapter-name> / search <word>/ quit"
+while read op arg ; do
+   
+   #saving the size of operation
+   #echo $op > optxt
+   #cut -f1,2 -d" " optxt | wc -w > size_of_op
+   
+   #if the size is 2
+   if [[ $arg != "" ]] ; then
+     echo "i was in the 2 place"
+     
+     if [[ $op == stats ]] ; then
+       for chapter in $(cat $1) ; do
+         if [[ $arg == $(head -n1 $chapter) ]] ; then
+           echo "$(head -n1 $chapter): $(($(wc -l < $chapter) -2)) lines, $(($(wc -w < $chapter) -1)) words"
+         fi
+       done
+       
+     #this is not working and i dont know why ask about this, needs to be ordered, how to order if doesnt exist?
+     elif [[ $op == search ]] ; then
+       for chapter in $(cat $1) ; do
+         if [[ $(grep -E -w -i '$arg' $chapter | wc -l) -gt 0 ]] ; then
+           echo "$(head -n1 $chapter): $(grep -E -w -i $arg $chapter | wc -l)" 
+         fi
+       done 
+        
+     fi
+     
+   #if the size is 1
+   elif [[ $arg == "" ]] ; then
+     echo "i was in the 1 place"
+     
+     if [[ $op == number ]] ; then
+       echo "$(wc -l < $1) chapters"
+     
+     elif [[ $op == files ]] ; then
+       for chapter in $(cat $1) ; do
+         echo "$(head -n1 $chapter): $chapter" >> sorted
+       done
+       cat sorted | sort
+       rm sorted
+  
+     elif [[ $op == names ]] ; then
+       for chapter in $(cat $1) ; do
+         echo "$(head -n1 $chapter): $(head -n3 $chapter | tail -n1)" >> sorted
+       done
+       cat sorted | sort
+       rm sorted
+  
+     elif [[ $op == stats ]] ; then
+       for chapter in $(cat $1) ; do
+         echo "$(head -n1 $chapter): $(($(wc -l < $chapter) -2)) lines, $(($(wc -w < $chapter) -1)) words" >> sorted
+       done
+       cat sorted | sort
+       rm sorted
+       
+     elif [[ $op == quit ]] ; then
+       exit 1 
+   
+     fi
+   fi
+   echo "Enter: number / files / names / stats <chapter-name> / search <word>/ quit"
+   
+done

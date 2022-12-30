@@ -1,0 +1,59 @@
+if [[ $# -eq 0 ]] ;  then
+     echo 'No argument supplied'
+     exit 1
+fi
+
+echo -e "\n\n\nHi this is Mali & Rotem! \nHere are the service we can supply:\n\n1. number (with out any arguments) : \nPrints the number of chapters.\n\n2.files : \nprint the names of the files related to the chapters.\n\n3. names : \nprint the name of the chapters.\n \n4. stats : \nWith an optional argument of the chapter name. \nPrint the number of lines and words in the content of the chapter.\nSelected, or in the chapter content for all chapters, if the argument is absent.\n\n5. search:\nWith an argument that is a regular search term.\nPrint the number of lines in which the phrase appears in the chapter content.\nOnly the lines in which the number of instances is greater than zero need be printed.\nThe search is as a word, and with ignore case (i.e. grep -E -w -i)\n\n6. quit : \nExiting the script. (Also EOF in stdin exits the script)."
+
+until [[ $op == quit ]] ; do
+
+echo "Enter operation:"
+read -r op arg 
+   
+if [[ $op == number ]] ; then
+  echo "$(wc -l < $1) chapters"
+   
+elif [[ $op == files ]] ; then
+    	for line in $(cat $1) ; do
+         echo "$(head -n1 < $line): $line"  >> sorted
+     done
+     sort sorted
+     rm sorted
+   
+elif [[ $op == names ]] ; then
+     	for line in $(cat $1) ; do
+         echo "$(head -n1 < $line): $(sed -n '3p' < $line)" >> sorted
+     done
+     sort sorted
+     rm sorted
+
+elif [[ $op == stats ]] ; then
+    if [[ -z "$arg" ]] ; then
+          for chapter in $(cat $1) ; do
+        echo "$(head -n1 < $chapter): $(wc -l < $chapter) lines $(wc -w < $chapter) words" >> sorted
+      done 
+      sort sorted
+      rm sorted
+    else
+    echo "$(cat $1 | grep -l $arg)"
+    fi
+             
+elif [[ $op == search ]] ; then
+	 echo search
+
+elif [[ $op == files ]] ; then
+    	echo files
+
+elif [[ $op == quit ]] ; then
+  echo baiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+  
+elif [[ $op == EOF ]] ; then
+  echo baiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+	
+else
+  echo -e "illegal operation bitch\nsorry I got carried away...\nyou are not allowed to degrade me for cursing"
+
+fi
+     
+done
+exit

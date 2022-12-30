@@ -1,0 +1,155 @@
+//
+// Created by Mali Abramovitch on 27/04/2022.
+//
+
+#include "Hist.h"
+#include "Set.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include "LinkedList.h"
+#include <stdlib.h>
+#include <string.h>
+
+
+
+
+// An ADT for the Hist object. Such object maintains and unordered set of elements, along with a count for each one.
+
+// Create a new histogram object, with element manipulation functions:
+// clone_func - return a pointer to the cloned element.
+// free_func - free an element returned by clone_func
+// cmp_func - return true if the two elements are equal
+
+
+
+typedef void *Element;
+
+typedef struct Couples {
+    Element e;
+    int times;
+} *Couples;
+
+static Element (*clone_func_element) (Element);
+static void (*free_func_element) (Element);
+static bool (*cmp_func_element) (Element);
+
+
+static Couples CouplesCreate(Element (*clone_func)(Element), Element e, int times) {
+    Couples couples = malloc(sizeof(struct Couples));
+    if (!couples) {
+        fprintf(stderr, "malloc has failed");
+        exit(0);
+    }
+    couples->e = clone_func(e);
+    couples->times = times;
+    return couples;
+};
+
+
+static Couples clone_func_couples (Couples e) {
+    return CouplesCreate(clone_func_element, e->e, e->times);
+}
+
+
+static void free_func_couples (Couples e) {
+    free(e);
+}
+
+
+static bool cmp_func_couples (Couples e1, Element e2) {
+    if (cmp_func_couples(e1->e, e2))
+        return true;
+    else return false;
+}
+
+
+struct Hist {
+    Set set;
+
+    Element (*clone_func)(Element);
+
+    void (*free_func)(Element);
+
+    bool (*cmp_func)(Element, Element);
+};
+
+
+Hist HistCreate(Element (*clone_func)(Element), void (*free_func)(Element), bool (*cmp_func)(Element, Element)) {
+    Hist hist = malloc(sizeof(struct Hist));
+    if (!hist) {
+        fprintf(stderr, "malloc hae failed");
+        exit(0);
+    }
+
+    hist->clone_func = clone_func;
+    hist->free_func = free_func;
+    hist->cmp_func = cmp_func;
+
+    clone_func_element = hist->clone_func;
+    free_func_element = hist->free_func;
+    cmp_func_element = hist->cmp_func;
+
+    hist->set = SetCreate(clone_func_couples, free_func_couples, cmp_func_couples);
+    return hist;
+}
+
+// Destroy a histogram object (along with all its elements)
+void HistDestroy(Hist hist) {
+    SetDestroy(hist->set);
+    free(hist);
+}
+
+// Return the number of elements in the hist object
+unsigned int HistSize(Hist hist) {
+    unsigned int count = 0;
+    SetFirst(hist->set);
+    if (SetIsEmpty(hist->set))
+        return count;
+    count = 1;
+    while (SetNext(hist->set)) {
+        count++;
+    }
+    return count;
+}
+
+// Get the count of element e. If e is not in hist, returns 0.
+int HistGetCount(Hist hist, Element e) {
+    if (!SetIsIn(hist->set, e))
+        return 0;
+    SetFirst(hist->set);
+    Couples c = SetFirst(hist->set);
+    while (!hist->cmp_func(c->e, e)) {
+        c = SetNext(hist->set);
+    }
+    return c->times;
+}
+
+
+// Increment the count of e by one.
+// If e is not in hist, create a new entry with a clone of e and a count of 1.
+void HistInc(Hist hist, Element e) {
+    if (!SetIsIn(hist->set, e)) {
+        Couples couples = CouplesCreate(hist->clone_func, e, 1);
+        SetAdd(hist->set, couples);
+    } else {
+        Couples c = SetFirst(hist->set);
+        while (!hist->cmp_func(c->e, e)) {
+            c = SetNext(hist->set);
+        }
+        c->times++;
+    }
+}
+
+
+// Gets (a clone of) the element at given index.
+// If index<0 or index >= HistSize(hist) then NULL is returned.
+Element HistGetElement(Hist hist, unsigned int index) {
+    if (index > HistSize(hist) - 1 || index < 0)
+        return NULL;
+    unsigned int i = 0;
+    Couples c = SetFirst(hist->set);
+    while (i < index)
+        c = SetNext(hist->set);
+    return c->e;
+}
+
