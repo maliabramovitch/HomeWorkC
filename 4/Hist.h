@@ -19,7 +19,7 @@ typedef struct Hist *Hist;
 // free_func - free an element returned by clone_func
 // cmp_func - return true if the two elements are equal
 
-Hist HistCreate(Element (*clone_func)(Element), void (*free_func)(Element),  bool (*cmp_func)(Element, Element));
+Hist HistCreate(Element (*clone_func)(Element), void (*free_func)(Element), bool (*cmp_func)(Element, Element));
 
 // Destroy a histogram object (along with all its elements)
 void HistDestroy(Hist hist);
